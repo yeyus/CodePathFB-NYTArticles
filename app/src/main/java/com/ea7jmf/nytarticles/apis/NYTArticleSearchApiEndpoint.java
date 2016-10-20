@@ -12,6 +12,12 @@ import retrofit2.http.Query;
 public interface NYTArticleSearchApiEndpoint {
 
     @GET("/svc/search/v2/articlesearch.json")
-    rx.Observable<SearchResponse> articleSearch(@Query("begin_date") String beginDate, @Query("sort") String sort, @Query("fq") String filterQuery, @Query("api-key") String apiKey);
+    rx.Observable<SearchResponse> articleSearch(
+            @Query("q") String query,
+            @Query("page") int page,
+            @Query("begin_date") String beginDate,
+            @Query("sort") String sort,
+            @Query("fq") String filterQuery,
+            @Query("api-key") String apiKey);
 
 }

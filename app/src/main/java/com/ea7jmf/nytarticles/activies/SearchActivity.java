@@ -12,13 +12,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.ea7jmf.nytarticles.R;
 import com.ea7jmf.nytarticles.adapters.ArticlesAdapter;
 import com.ea7jmf.nytarticles.apis.NYTArticleSearchApiEndpoint;
 import com.ea7jmf.nytarticles.models.Doc;
-import com.ea7jmf.nytarticles.models.SearchResponse;
+import com.facebook.stetho.okhttp3.StethoInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -26,22 +25,23 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava.HttpException;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import rx.Observable;
-import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 public class SearchActivity extends AppCompatActivity {
 
     public static String TAG = "SearchActivity";
     public static String NYT_API_BASE = "https://api.nytimes.com/";
+
+    private NYTArticleSearchApiEndpoint apiService;
     private String nytApiKey;
+
     private ArrayList<Doc> articles;
     private ArticlesAdapter articlesAdapter;
 
@@ -74,50 +74,20 @@ public class SearchActivity extends AppCompatActivity {
 
         RxJavaCallAdapterFactory rxAdapter = RxJavaCallAdapterFactory.createWithScheduler(Schedulers.io());
 
+        OkHttpClient client = new OkHttpClient.Builder()
+                .addNetworkInterceptor(new StethoInterceptor())
+                .build();
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(NYT_API_BASE)
+                .client(client)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .addCallAdapterFactory(rxAdapter)
                 .build();
 
+        apiService = retrofit.create(NYTArticleSearchApiEndpoint.class);
 
-
-        NYTArticleSearchApiEndpoint apiService =
-                retrofit.create(NYTArticleSearchApiEndpoint.class);
-
-        Observable<Doc> call = apiService.articleSearch("20160112", "oldest", "news_desk:(\"Education\"%20\"Health\")", nytApiKey)
-                .flatMap(new Func1<SearchResponse, Observable<Doc>>() {
-                    @Override
-                    public Observable<Doc> call(SearchResponse searchResponse) {
-                        return rx.Observable.from(searchResponse.getResponse().getDocs());
-                    }
-                });
-
-        Subscription subscription = call
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread()).subscribe(new Subscriber<Doc>() {
-                    @Override
-                    public void onCompleted() {
-
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        // cast to retrofit.HttpException to get the response code
-                        if (e instanceof HttpException) {
-                            HttpException response = (HttpException)e;
-                            int code = response.code();
-                            Log.e(TAG, "HTTP call failed with code " + code, e);
-                        }
-                    }
-
-                    @Override
-                    public void onNext(Doc response) {
-                        Log.i(TAG, response.toString());
-                        articles.add(response);
-                        articlesAdapter.notifyItemInserted(articles.size() - 1);
-                    }
-                });
+        getArticlesByQuery("election");
 
     }
 
@@ -135,9 +105,7 @@ public class SearchActivity extends AppCompatActivity {
                 // workaround to avoid issues with some emulators and keyboard devices firing twice if a keyboard enter is used
                 // see https://code.google.com/p/android/issues/detail?id=24599
                 searchView.clearFocus();
-
-                Toast.makeText(SearchActivity.this, query, Toast.LENGTH_LONG).show();
-
+                getArticlesByQuery(query);
                 return true;
             }
 
@@ -147,5 +115,23 @@ public class SearchActivity extends AppCompatActivity {
             }
         });
         return super.onCreateOptionsMenu(menu);
+    }
+
+    private void getArticlesByQuery(String query) {
+        Observable<Doc> call = apiService
+                .articleSearch(query, 1, "20160112", "oldest", "news_desk:(\"Education\"%20\"Health\")", nytApiKey)
+                .flatMap(searchResponse -> rx.Observable.from(searchResponse.getResponse().getDocs()));
+
+        Subscription subscription = call
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        article -> {
+                            articles.add(article);
+                            articlesAdapter.notifyItemInserted(articles.size() - 1);
+                        },
+                        throwable -> Log.e(TAG, "HTTP call failed", throwable),
+                        () -> Log.i(TAG, "HTTP fetch complete")
+                );
     }
 }
