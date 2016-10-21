@@ -105,6 +105,9 @@ public class SearchActivity extends AppCompatActivity {
                 // workaround to avoid issues with some emulators and keyboard devices firing twice if a keyboard enter is used
                 // see https://code.google.com/p/android/issues/detail?id=24599
                 searchView.clearFocus();
+                int size = articles.size();
+                articles.clear();
+                articlesAdapter.notifyItemRangeRemoved(0, size);
                 getArticlesByQuery(query);
                 return true;
             }
@@ -119,7 +122,7 @@ public class SearchActivity extends AppCompatActivity {
 
     private void getArticlesByQuery(String query) {
         Observable<Doc> call = apiService
-                .articleSearch(query, 1, "20160112", "oldest", "news_desk:(\"Education\"%20\"Health\")", nytApiKey)
+                .articleSearch(query, 1, "20160112", "oldest", null, nytApiKey)
                 .flatMap(searchResponse -> rx.Observable.from(searchResponse.getResponse().getDocs()));
 
         Subscription subscription = call

@@ -2,41 +2,69 @@ package com.ea7jmf.nytarticles.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.ea7jmf.nytarticles.R;
 import com.ea7jmf.nytarticles.models.Doc;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import rx.Observable;
 
-/**
- * Created by jesusft on 10/18/16.
- */
+import static com.bumptech.glide.load.engine.DiskCacheStrategy.NONE;
 
 public class ArticlesAdapter extends RecyclerView.Adapter<ArticlesAdapter.ViewHolder> {
 
+    public static final String TAG = "ArticlesAdapter";
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        @BindView(R.id.ivThumbnail) ImageView ivThumbnail;
         @BindView(R.id.tvHeadline) TextView tvHeadline;
-        @BindView(R.id.tvSnippet) TextView tvSnippet;
 
         public ViewHolder(View view) {
             super(view);
             ButterKnife.bind(this, view);
         }
 
-        public void bind(Doc doc) {
+        public void bind(Doc doc, Context context) {
             if (doc.getHeadline() != null && doc.getHeadline().getMain() != null) {
                 tvHeadline.setText(doc.getHeadline().getMain());
             }
-            if (doc.getSnippet() != null) {
-                tvSnippet.setText(doc.getSnippet());
-            }
+
+            Observable<String> thumbnail = Observable.from(doc.getMultimedia())
+                    .filter(multimedia -> multimedia.getWidth() > 150)
+                    .map(multimedium -> String.format("https://nytimes.com/%s", multimedium.getUrl()))
+                    .first();
+
+            ivThumbnail.setVisibility(View.INVISIBLE);
+            thumbnail.subscribe(
+                    thumbUrl -> {
+                        Glide.with(context)
+                                .load(thumbUrl)
+                                .diskCacheStrategy(NONE)
+                                .skipMemoryCache(true)
+                                .into(ivThumbnail);
+                        ivThumbnail.setVisibility(View.VISIBLE);
+                    },
+                    throwable -> {
+                        if (throwable instanceof NoSuchElementException) {
+                            ivThumbnail.setVisibility(View.INVISIBLE);
+                            return;
+                        }
+                        Log.i(TAG, "error while filtering thumbnail", throwable);
+                    },
+                    () -> {}
+            );
+
         }
     }
 
@@ -66,7 +94,7 @@ public class ArticlesAdapter extends RecyclerView.Adapter<ArticlesAdapter.ViewHo
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Doc doc = mDocs.get(position);
-        holder.bind(doc);
+        holder.bind(doc, getContext());
     }
 
     @Override
