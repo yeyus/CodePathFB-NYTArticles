@@ -5,9 +5,9 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -56,7 +56,7 @@ public class SearchActivity extends AppCompatActivity {
         articles = new ArrayList<>();
         articlesAdapter = new ArticlesAdapter(this, articles);
         rvSearchResults.setAdapter(articlesAdapter);
-        rvSearchResults.setLayoutManager(new LinearLayoutManager(this));
+        rvSearchResults.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
 
         try {
             ApplicationInfo ai = getPackageManager().getApplicationInfo(getPackageName(), PackageManager.GET_META_DATA);
