@@ -17,6 +17,8 @@ import com.ea7jmf.nytarticles.R;
 import com.ea7jmf.nytarticles.adapters.ArticlesAdapter;
 import com.ea7jmf.nytarticles.apis.NYTArticleSearchApiEndpoint;
 import com.ea7jmf.nytarticles.models.Doc;
+import com.ea7jmf.nytarticles.models.SearchQuery;
+import com.ea7jmf.nytarticles.thirdparty.EndlessRecyclerViewScrollListener;
 import com.facebook.stetho.okhttp3.StethoInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -42,6 +44,8 @@ public class SearchActivity extends AppCompatActivity {
     private NYTArticleSearchApiEndpoint apiService;
     private String nytApiKey;
 
+    private SearchQuery query;
+
     private ArrayList<Doc> articles;
     private ArticlesAdapter articlesAdapter;
 
@@ -56,7 +60,18 @@ public class SearchActivity extends AppCompatActivity {
         articles = new ArrayList<>();
         articlesAdapter = new ArticlesAdapter(this, articles);
         rvSearchResults.setAdapter(articlesAdapter);
-        rvSearchResults.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+        rvSearchResults.setLayoutManager(layoutManager);
+        rvSearchResults.addOnScrollListener(new EndlessRecyclerViewScrollListener(layoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount) {
+                getArticlesByQuery(
+                        new SearchQuery.Builder(query)
+                            .page(page)
+                            .build()
+                );
+            }
+        });
 
         try {
             ApplicationInfo ai = getPackageManager().getApplicationInfo(getPackageName(), PackageManager.GET_META_DATA);
@@ -87,7 +102,9 @@ public class SearchActivity extends AppCompatActivity {
 
         apiService = retrofit.create(NYTArticleSearchApiEndpoint.class);
 
-        getArticlesByQuery("election");
+        query = new SearchQuery.Builder("obama")
+                .build();
+        getArticlesByQuery(query);
 
     }
 
@@ -99,7 +116,7 @@ public class SearchActivity extends AppCompatActivity {
         final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public boolean onQueryTextSubmit(String query) {
+            public boolean onQueryTextSubmit(String queryString) {
                 // perform query here
 
                 // workaround to avoid issues with some emulators and keyboard devices firing twice if a keyboard enter is used
@@ -108,7 +125,11 @@ public class SearchActivity extends AppCompatActivity {
                 int size = articles.size();
                 articles.clear();
                 articlesAdapter.notifyItemRangeRemoved(0, size);
-                getArticlesByQuery(query);
+                getArticlesByQuery(
+                        new SearchQuery.Builder(query)
+                            .query(queryString)
+                            .build()
+                );
                 return true;
             }
 
@@ -120,9 +141,15 @@ public class SearchActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-    private void getArticlesByQuery(String query) {
+    private void getArticlesByQuery(SearchQuery query) {
         Observable<Doc> call = apiService
-                .articleSearch(query, 1, "20160112", "oldest", null, nytApiKey)
+                .articleSearch(
+                        query.getQuery(),
+                        query.getPage(),
+                        query.getFormattedBeginDate(),
+                        query.getFormattedSort(),
+                        null,
+                        nytApiKey)
                 .flatMap(searchResponse -> rx.Observable.from(searchResponse.getResponse().getDocs()));
 
         Subscription subscription = call
