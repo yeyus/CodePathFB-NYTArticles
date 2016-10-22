@@ -2,7 +2,9 @@ package com.ea7jmf.nytarticles.activies;
 
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.customtabs.CustomTabsIntent;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -57,22 +59,6 @@ public class SearchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search);
         ButterKnife.bind(this);
 
-        articles = new ArrayList<>();
-        articlesAdapter = new ArticlesAdapter(this, articles);
-        rvSearchResults.setAdapter(articlesAdapter);
-        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
-        rvSearchResults.setLayoutManager(layoutManager);
-        rvSearchResults.addOnScrollListener(new EndlessRecyclerViewScrollListener(layoutManager) {
-            @Override
-            public void onLoadMore(int page, int totalItemsCount) {
-                getArticlesByQuery(
-                        new SearchQuery.Builder(query)
-                            .page(page)
-                            .build()
-                );
-            }
-        });
-
         try {
             ApplicationInfo ai = getPackageManager().getApplicationInfo(getPackageName(), PackageManager.GET_META_DATA);
             Bundle bundle = ai.metaData;
@@ -104,6 +90,32 @@ public class SearchActivity extends AppCompatActivity {
 
         query = new SearchQuery.Builder("obama")
                 .build();
+
+        articles = new ArrayList<>();
+        articlesAdapter = new ArticlesAdapter(this, articles);
+        rvSearchResults.setAdapter(articlesAdapter);
+        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+        rvSearchResults.setLayoutManager(layoutManager);
+        rvSearchResults.addOnScrollListener(new EndlessRecyclerViewScrollListener(layoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount) {
+                getArticlesByQuery(
+                        new SearchQuery.Builder(query)
+                                .page(page)
+                                .build()
+                );
+            }
+        });
+        articlesAdapter.getOnClickSubject().subscribe(
+                doc -> {
+                    CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+                    CustomTabsIntent customTabsIntent = builder.build();
+                    customTabsIntent.launchUrl(this, Uri.parse(doc.getWebUrl()));
+                },
+                throwable -> {},
+                () -> {}
+        );
+
         getArticlesByQuery(query);
 
     }
