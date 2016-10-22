@@ -1,8 +1,12 @@
 package com.ea7jmf.nytarticles.activies;
 
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.customtabs.CustomTabsIntent;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -13,26 +17,19 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import com.ea7jmf.nytarticles.NYTApplication;
 import com.ea7jmf.nytarticles.R;
 import com.ea7jmf.nytarticles.adapters.ArticlesAdapter;
 import com.ea7jmf.nytarticles.apis.NYTArticleSearchApiEndpoint;
 import com.ea7jmf.nytarticles.models.Doc;
 import com.ea7jmf.nytarticles.models.SearchQuery;
 import com.ea7jmf.nytarticles.thirdparty.EndlessRecyclerViewScrollListener;
-import com.facebook.stetho.okhttp3.StethoInterceptor;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import okhttp3.OkHttpClient;
-import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
-import retrofit2.converter.gson.GsonConverterFactory;
 import rx.Observable;
-import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
@@ -42,7 +39,6 @@ public class SearchActivity extends AppCompatActivity {
     public static String NYT_API_BASE = "https://api.nytimes.com/";
 
     private NYTArticleSearchApiEndpoint apiService;
-    private String nytApiKey;
 
     private SearchQuery query;
 
@@ -57,6 +53,9 @@ public class SearchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search);
         ButterKnife.bind(this);
 
+        apiService = ((NYTApplication)getApplication()).getNytRetrofit()
+                .create(NYTArticleSearchApiEndpoint.class);
+
         articles = new ArrayList<>();
         articlesAdapter = new ArticlesAdapter(this, articles);
         rvSearchResults.setAdapter(articlesAdapter);
@@ -67,43 +66,40 @@ public class SearchActivity extends AppCompatActivity {
             public void onLoadMore(int page, int totalItemsCount) {
                 getArticlesByQuery(
                         new SearchQuery.Builder(query)
-                            .page(page)
-                            .build()
+                                .page(page)
+                                .build()
                 );
             }
         });
 
-        try {
-            ApplicationInfo ai = getPackageManager().getApplicationInfo(getPackageName(), PackageManager.GET_META_DATA);
-            Bundle bundle = ai.metaData;
-            nytApiKey = bundle.getString("NYT_API_KEY");
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.e(TAG, "Failed to load meta-data, NameNotFound: " + e.getMessage());
-        } catch (NullPointerException e) {
-            Log.e(TAG, "Failed to load meta-data, NullPointer: " + e.getMessage());
-        }
+        articlesAdapter.getOnClickSubject().subscribe(
+                doc -> {
+                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_share_black_24dp);
 
-        Gson gson = new GsonBuilder()
-                .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-                .create();
+                    // Create share intent
+                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                    shareIntent.setType("text/plain");
+                    shareIntent.putExtra(Intent.EXTRA_TEXT, doc.getWebUrl());
 
-        RxJavaCallAdapterFactory rxAdapter = RxJavaCallAdapterFactory.createWithScheduler(Schedulers.io());
+                    // Create pending intent for action
+                    PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                            100,
+                            shareIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT);
 
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addNetworkInterceptor(new StethoInterceptor())
-                .build();
+                    CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+                    builder.setActionButton(bitmap, getString(R.string.share_link_button), pendingIntent, true);
+                    CustomTabsIntent customTabsIntent = builder.build();
+                    customTabsIntent.launchUrl(this, Uri.parse(doc.getWebUrl()));
+                },
+                throwable -> Log.e(TAG, "RecyclerView onClick subject error", throwable),
+                () -> Log.i(TAG, "RecyclerView onClick complete")
+        );
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(NYT_API_BASE)
-                .client(client)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .addCallAdapterFactory(rxAdapter)
-                .build();
-
-        apiService = retrofit.create(NYTArticleSearchApiEndpoint.class);
-
+        // TODO - remove default query
         query = new SearchQuery.Builder("obama")
                 .build();
+
         getArticlesByQuery(query);
 
     }
@@ -149,11 +145,10 @@ public class SearchActivity extends AppCompatActivity {
                         query.getFormattedBeginDate(),
                         query.getFormattedSort(),
                         null,
-                        nytApiKey)
+                        ((NYTApplication)getApplication()).getNytApiKey())
                 .flatMap(searchResponse -> rx.Observable.from(searchResponse.getResponse().getDocs()));
 
-        Subscription subscription = call
-                .subscribeOn(Schedulers.io())
+        call.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         article -> {

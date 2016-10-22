@@ -1,6 +1,7 @@
 package com.ea7jmf.nytarticles.adapters;
 
 import android.content.Context;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,6 +20,7 @@ import java.util.NoSuchElementException;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Observable;
+import rx.subjects.PublishSubject;
 
 import static com.bumptech.glide.load.engine.DiskCacheStrategy.NONE;
 
@@ -26,7 +28,10 @@ public class ArticlesAdapter extends RecyclerView.Adapter<ArticlesAdapter.ViewHo
 
     public static final String TAG = "ArticlesAdapter";
 
+    private final PublishSubject<Doc> onClickSubject = PublishSubject.create();
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        @BindView(R.id.card) CardView card;
         @BindView(R.id.ivThumbnail) ImageView ivThumbnail;
         @BindView(R.id.tvHeadline) TextView tvHeadline;
 
@@ -95,10 +100,15 @@ public class ArticlesAdapter extends RecyclerView.Adapter<ArticlesAdapter.ViewHo
     public void onBindViewHolder(ViewHolder holder, int position) {
         Doc doc = mDocs.get(position);
         holder.bind(doc, getContext());
+        holder.card.setOnClickListener(v -> onClickSubject.onNext(doc));
     }
 
     @Override
     public int getItemCount() {
         return mDocs.size();
+    }
+
+    public PublishSubject<Doc> getOnClickSubject() {
+        return onClickSubject;
     }
 }

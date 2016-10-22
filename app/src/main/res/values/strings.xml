@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">NYTArticles</string>
+    <string name="share_link_button">Share Link</string>
 </resources>
