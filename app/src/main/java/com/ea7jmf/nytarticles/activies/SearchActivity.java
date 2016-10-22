@@ -1,5 +1,9 @@
 package com.ea7jmf.nytarticles.activies;
 
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.customtabs.CustomTabsIntent;
@@ -70,8 +74,21 @@ public class SearchActivity extends AppCompatActivity {
 
         articlesAdapter.getOnClickSubject().subscribe(
                 doc -> {
+                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_share_black_24dp);
+
+                    // Create share intent
+                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                    shareIntent.setType("text/plain");
+                    shareIntent.putExtra(Intent.EXTRA_TEXT, doc.getWebUrl());
+
+                    // Create pending intent for action
+                    PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                            100,
+                            shareIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT);
+
                     CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-                    builder.addDefaultShareMenuItem();
+                    builder.setActionButton(bitmap, getString(R.string.share_link_button), pendingIntent, true);
                     CustomTabsIntent customTabsIntent = builder.build();
                     customTabsIntent.launchUrl(this, Uri.parse(doc.getWebUrl()));
                 },
