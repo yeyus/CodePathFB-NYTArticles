@@ -43,6 +43,10 @@ import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
+import tourguide.tourguide.Overlay;
+import tourguide.tourguide.Pointer;
+import tourguide.tourguide.ToolTip;
+import tourguide.tourguide.TourGuide;
 
 public class SearchActivity extends AppCompatActivity {
 
@@ -62,6 +66,7 @@ public class SearchActivity extends AppCompatActivity {
     @BindView(R.id.drawer) DrawerLayout drawerLayout;
     @BindView(R.id.rvSearchResults) RecyclerView rvSearchResults;
     FiltersFragment filtersFragment;
+    TourGuide mTourHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +84,7 @@ public class SearchActivity extends AppCompatActivity {
 
         setupFiltersDrawer();
         setupRecyclerView();
+        setupTour();
 
         apiRequestSubject
                 .distinct()
@@ -88,6 +94,8 @@ public class SearchActivity extends AppCompatActivity {
                         throwable -> Log.e(TAG, "apiRequestSubject error", throwable),
                         () -> Log.i(TAG, "apiRequestSubject complete")
                 );
+
+
     }
 
     @Override
@@ -102,6 +110,7 @@ public class SearchActivity extends AppCompatActivity {
                 searchView.clearFocus();
                 clearResults();
                 getSupportActionBar().setTitle(queryString);
+                mTourHandler.cleanUp();
                 apiRequestSubject.onNext(
                         new SearchQuery.Builder(query)
                             .query(queryString)
@@ -205,6 +214,16 @@ public class SearchActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private void setupTour() {
+        mTourHandler = TourGuide.init(this).with(TourGuide.Technique.Click)
+                .setPointer(new Pointer())
+                .setToolTip(new ToolTip()
+                        .setTitle(getString(R.string.tour_welcome))
+                        .setDescription(getString(R.string.tour_cta)))
+                .setOverlay(new Overlay())
+                .playOn(toolbar);
     }
 
     private void getArticlesByQuery(SearchQuery query) {

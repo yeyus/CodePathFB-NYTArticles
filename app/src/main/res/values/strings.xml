@@ -11,4 +11,6 @@
     <!-- Internet check -->
     <string name="no_internet">No internet connection</string>
     <string name="retry">Retry</string>
+    <string name="tour_welcome">Welcome!</string>
+    <string name="tour_cta">Click on the looking glass and type a search query to begin</string>
 </resources>

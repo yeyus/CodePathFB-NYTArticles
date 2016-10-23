@@ -20,10 +20,10 @@ The following **required** functionality is completed:
 
 The following **optional** features are implemented:
 
-* [ ] Implements robust error handling, [check if internet is available](http://guides.codepath.com/android/Sending-and-Managing-Network-Requests#checking-for-network-connectivity), handle error cases, network failures
+* [x] Implements robust error handling, [check if internet is available](http://guides.codepath.com/android/Sending-and-Managing-Network-Requests#checking-for-network-connectivity), handle error cases, network failures
 * [x] Used the **ActionBar SearchView** or custom layout as the query box instead of an EditText
 * [x] User can **share an article link** to their friends or email it to themselves
-* [ ] Replaced Filter Settings Activity with a lightweight modal overlay
+* [x] Replaced Filter Settings Activity with a lightweight modal overlay
 * [x] Improved the user interface and experiment with image assets and/or styling and coloring
   * [x] Drawer view for filters
   * [x] Using CardView with RecyclerView
@@ -45,6 +45,7 @@ The following **additional** features are implemented:
 
 * [x] SearchQuery object follows Builder pattern and is immutable
 * [x] Requests are reactive and throttled according to NYT api limits (1req/s)
+* [x] Tour for guiding the user during the first interaction
 
 ## Video Walkthrough
 
