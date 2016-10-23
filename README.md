@@ -2,7 +2,7 @@
 
 **NYT Articles** is an android app that allows a user to search for articles on web using simple filters. The app utilizes [New York Times Search API](http://developer.nytimes.com/docs/read/article_search_api_v2).
 
-Time spent: **10** hours spent in total
+Time spent: **16** hours spent in total
 
 ## User Stories
 
@@ -51,7 +51,7 @@ The following **additional** features are implemented:
 
 Here's a walkthrough of implemented user stories:
 
-<img src='http://i.imgur.com/link/to/your/gif/file.gif' title='Video Walkthrough' width='' alt='Video Walkthrough' />
+[View Walkthrough](http://imgur.com/a/h6DYN)
 
 GIF created with [LiceCap](http://www.cockos.com/licecap/).
 
