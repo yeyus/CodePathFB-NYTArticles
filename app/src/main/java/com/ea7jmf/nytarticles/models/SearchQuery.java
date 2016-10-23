@@ -1,7 +1,11 @@
 package com.ea7jmf.nytarticles.models;
 
+import android.text.TextUtils;
+
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class SearchQuery {
 
@@ -15,6 +19,7 @@ public class SearchQuery {
     private final Date endDate;
     private final SortDirection sort;
     private final int page;
+    private final List<String> newsDesks;
 
 
     public String getQuery() {
@@ -30,12 +35,12 @@ public class SearchQuery {
     }
 
     public String getFormattedBeginDate() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyymmDD");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
         return beginDate != null ? dateFormat.format(beginDate) : null;
     }
 
     public String getFormattedEndDate() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyymmDD");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
         return endDate != null ? dateFormat.format(endDate) : null;
     }
 
@@ -65,6 +70,29 @@ public class SearchQuery {
         return page;
     }
 
+
+    public List<String> getNewsDesks() {
+        return newsDesks;
+    }
+
+    public String getFormattedNewsDesks() {
+        if (newsDesks == null) {
+            return null;
+        }
+
+        List<String> mod = new ArrayList<>();
+        for (String newsDesk : newsDesks) {
+            mod.add("\"" + newsDesk + "\"");
+        }
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("news_desk:(");
+        sb.append(TextUtils.join(" ", mod));
+        sb.append(")");
+
+        return sb.toString();
+    }
+
     public static class Builder {
 
         private String query;
@@ -72,6 +100,9 @@ public class SearchQuery {
         private Date endDate;
         private SortDirection sort;
         private int page = 0;
+        private List<String> newsDesks;
+
+        public Builder() {}
 
         public Builder(String query) {
             this.query = query;
@@ -83,6 +114,7 @@ public class SearchQuery {
             this.endDate = instance.getEndDate();
             this.sort = instance.getSort();
             this.page = instance.getPage();
+            this.newsDesks = instance.getNewsDesks();
         }
 
         public Builder query(String query) {
@@ -110,6 +142,11 @@ public class SearchQuery {
             return this;
         }
 
+        public Builder newsDesks(List<String> newsDesks) {
+            this.newsDesks = newsDesks;
+            return this;
+        }
+
         public SearchQuery build() {
             return new SearchQuery(this);
         }
@@ -121,5 +158,6 @@ public class SearchQuery {
         this.endDate = builder.endDate;
         this.sort = builder.sort;
         this.page = builder.page;
+        this.newsDesks = builder.newsDesks;
     }
 }

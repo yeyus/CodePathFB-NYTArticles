@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:text="@string/filters_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/tvHeader"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:layout_marginBottom="@dimen/filter_section_margin"/>
+
+    <Switch
+        android:text="@string/begin_date"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/swBeginDate" />
+
+    <DatePicker
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/dpBeginDate"
+        android:calendarViewShown="false" />
+
+    <Switch
+        android:text="@string/end_date"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/swEndDate" />
+
+    <DatePicker
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/dpEndDate"
+        android:calendarViewShown="false" />
+
+    <Switch
+        android:text="@string/sort_label"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/swSort" />
+
+    <android.support.v7.widget.AppCompatSpinner
+        android:id="@+id/spSort"
+        android:entries="@array/sort_array"
+        android:prompt="@string/sort_label"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        />
+
+    <TextView
+        android:text="@string/news_desk_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/tvNewsDesk"
+        android:layout_marginTop="@dimen/filter_section_margin"/>
+</LinearLayout>

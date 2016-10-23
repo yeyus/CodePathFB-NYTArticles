@@ -16,6 +16,7 @@ public interface NYTArticleSearchApiEndpoint {
             @Query("q") String query,
             @Query("page") int page,
             @Query("begin_date") String beginDate,
+            @Query("end_date") String endDate,
             @Query("sort") String sort,
             @Query("fq") String filterQuery,
             @Query("api-key") String apiKey);

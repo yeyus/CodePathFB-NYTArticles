@@ -8,19 +8,23 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.ea7jmf.nytarticles.NYTApplication;
 import com.ea7jmf.nytarticles.R;
 import com.ea7jmf.nytarticles.adapters.ArticlesAdapter;
 import com.ea7jmf.nytarticles.apis.NYTArticleSearchApiEndpoint;
+import com.ea7jmf.nytarticles.fragments.FiltersFragment;
 import com.ea7jmf.nytarticles.models.Doc;
 import com.ea7jmf.nytarticles.models.SearchQuery;
 import com.ea7jmf.nytarticles.thirdparty.EndlessRecyclerViewScrollListener;
@@ -49,7 +53,9 @@ public class SearchActivity extends AppCompatActivity {
 
     private final PublishSubject<SearchQuery> apiRequestSubject = PublishSubject.create();
 
+    @BindView(R.id.drawer) DrawerLayout drawerLayout;
     @BindView(R.id.rvSearchResults) RecyclerView rvSearchResults;
+    FiltersFragment filtersFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +66,67 @@ public class SearchActivity extends AppCompatActivity {
         apiService = ((NYTApplication)getApplication()).getNytRetrofit()
                 .create(NYTArticleSearchApiEndpoint.class);
 
+        // Create an empty instance of querys
+        query = new SearchQuery.Builder().build();
+
+        setupFiltersDrawer();
+        setupRecyclerView();
+
+        apiRequestSubject
+                .distinct()
+                .sample(1, TimeUnit.SECONDS)
+                .subscribe(
+                        searchQuery -> getArticlesByQuery(searchQuery),
+                        throwable -> Log.e(TAG, "apiRequestSubject error", throwable),
+                        () -> Log.i(TAG, "apiRequestSubject complete")
+                );
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String queryString) {
+                searchView.clearFocus();
+                clearResults();
+                getSupportActionBar().setTitle(queryString);
+                apiRequestSubject.onNext(
+                        new SearchQuery.Builder(query)
+                            .query(queryString)
+                            .build()
+                );
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // handle item selection
+        switch (item.getItemId()) {
+            case R.id.action_filters:
+                if (drawerLayout.isDrawerOpen(Gravity.RIGHT)) {
+                    drawerLayout.closeDrawer(Gravity.RIGHT);
+                } else {
+                    drawerLayout.openDrawer(Gravity.RIGHT);
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void setupRecyclerView() {
         articles = new ArrayList<>();
         articlesAdapter = new ArticlesAdapter(this, articles);
         rvSearchResults.setAdapter(articlesAdapter);
@@ -70,20 +137,11 @@ public class SearchActivity extends AppCompatActivity {
             public void onLoadMore(int page, int totalItemsCount) {
                 apiRequestSubject.onNext(
                         new SearchQuery.Builder(query)
-                            .page(page)
-                            .build()
+                                .page(page)
+                                .build()
                 );
             }
         });
-
-        apiRequestSubject
-                .distinct()
-                .sample(1, TimeUnit.SECONDS)
-                .subscribe(
-                        searchQuery -> getArticlesByQuery(searchQuery),
-                        throwable -> Log.e(TAG, "apiRequestSubject error", throwable),
-                        () -> Log.i(TAG, "apiRequestSubject complete")
-                );
 
         articlesAdapter.getOnClickSubject().subscribe(
                 doc -> {
@@ -108,46 +166,37 @@ public class SearchActivity extends AppCompatActivity {
                 throwable -> Log.e(TAG, "RecyclerView onClick subject error", throwable),
                 () -> Log.i(TAG, "RecyclerView onClick complete")
         );
-
-        // TODO - remove default query
-        apiRequestSubject.onNext(
-                new SearchQuery.Builder("obama")
-                    .build()
-        );
-
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu, menu);
-        MenuItem searchItem = menu.findItem(R.id.action_search);
-        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String queryString) {
-                // perform query here
+    private void setupFiltersDrawer() {
+        filtersFragment = (FiltersFragment)
+                getSupportFragmentManager().findFragmentById(R.id.filtersFragment);
 
-                // workaround to avoid issues with some emulators and keyboard devices firing twice if a keyboard enter is used
-                // see https://code.google.com/p/android/issues/detail?id=24599
-                searchView.clearFocus();
-                int size = articles.size();
-                articles.clear();
-                articlesAdapter.notifyItemRangeRemoved(0, size);
-                apiRequestSubject.onNext(
-                        new SearchQuery.Builder(query)
-                            .query(queryString)
-                            .build()
-                );
-                return true;
+        drawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+
             }
 
             @Override
-            public boolean onQueryTextChange(String newText) {
-                return false;
+            public void onDrawerOpened(View drawerView) {
+
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                clearResults();
+                query = new SearchQuery.Builder(filtersFragment.getFilters())
+                        .query(query.getQuery())
+                        .build();
+                apiRequestSubject.onNext(query);
+            }
+
+            @Override
+            public void onDrawerStateChanged(int newState) {
+
             }
         });
-        return super.onCreateOptionsMenu(menu);
     }
 
     private void getArticlesByQuery(SearchQuery query) {
@@ -157,8 +206,9 @@ public class SearchActivity extends AppCompatActivity {
                         query.getQuery(),
                         query.getPage(),
                         query.getFormattedBeginDate(),
+                        query.getFormattedEndDate(),
                         query.getFormattedSort(),
-                        null,
+                        query.getFormattedNewsDesks(),
                         ((NYTApplication)getApplication()).getNytApiKey())
                 .flatMap(searchResponse -> rx.Observable.from(searchResponse.getResponse().getDocs()));
 
@@ -172,5 +222,11 @@ public class SearchActivity extends AppCompatActivity {
                         throwable -> Log.e(TAG, "HTTP call failed", throwable),
                         () -> Log.i(TAG, "HTTP fetch complete")
                 );
+    }
+
+    private void clearResults() {
+        int size = articles.size();
+        articles.clear();
+        articlesAdapter.notifyItemRangeRemoved(0, size);
     }
 }

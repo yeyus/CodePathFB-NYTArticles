@@ -1,4 +1,10 @@
 <resources>
-    <string name="app_name">NYTArticles</string>
+    <string name="app_name">New York Times</string>
     <string name="share_link_button">Share Link</string>
+    <string name="filters_header">Filters</string>
+    <string name="begin_date">Begin date</string>
+    <string name="end_date">End date</string>
+    <string name="sort_label">Sort</string>
+    <string name="news_desk_label">News Desk</string>
+    <string name="filter">Filter</string>
 </resources>

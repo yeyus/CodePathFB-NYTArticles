@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="news_desk_array">
+        <item>Adventure Sports</item>
+        <item>Arts</item>
+        <item>Automobiles</item>
+        <item>Blogs</item>
+        <item>Books</item>
+        <item>Booming</item>
+        <item>Business Day</item>
+        <item>Business</item>
+        <item>Cars</item>
+        <item>Circuits</item>
+        <item>Classifieds</item>
+        <item>Culture</item>
+        <item>Dining</item>
+        <item>Editorial</item>
+        <item>Education</item>
+        <item>Energy</item>
+        <item>Entrepreneurs</item>
+        <item>Environment</item>
+        <item>Escapes</item>
+        <item>Fashion</item>
+        <item>Favorites</item>
+        <item>Financial</item>
+        <item>Flight</item>
+        <item>Food</item>
+        <item>Foreign</item>
+        <item>Health</item>
+        <item>Home</item>
+        <item>Jobs</item>
+        <item>Magazine</item>
+        <item>Media</item>
+    </string-array>
+</resources>
