@@ -10,5 +10,5 @@
         android:orderInCategory="10"
         android:title="@string/filter"
         android:icon="@drawable/ic_sort_by_alpha_black_24dp"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="always"/>
 </menu>

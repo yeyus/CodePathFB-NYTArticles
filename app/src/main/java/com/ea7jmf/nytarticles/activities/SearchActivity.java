@@ -17,6 +17,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -57,6 +58,7 @@ public class SearchActivity extends AppCompatActivity {
 
     private final PublishSubject<SearchQuery> apiRequestSubject = PublishSubject.create();
 
+    @BindView(R.id.toolbar) Toolbar toolbar;
     @BindView(R.id.drawer) DrawerLayout drawerLayout;
     @BindView(R.id.rvSearchResults) RecyclerView rvSearchResults;
     FiltersFragment filtersFragment;
@@ -72,6 +74,8 @@ public class SearchActivity extends AppCompatActivity {
 
         // Create an empty instance of querys
         query = new SearchQuery.Builder().build();
+
+        setSupportActionBar(toolbar);
 
         setupFiltersDrawer();
         setupRecyclerView();
