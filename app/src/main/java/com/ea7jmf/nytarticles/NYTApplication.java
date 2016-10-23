@@ -17,7 +17,7 @@ import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import rx.schedulers.Schedulers;
 
-import static com.ea7jmf.nytarticles.activies.SearchActivity.NYT_API_BASE;
+import static com.ea7jmf.nytarticles.activities.SearchActivity.NYT_API_BASE;
 
 public class NYTApplication extends Application {
 

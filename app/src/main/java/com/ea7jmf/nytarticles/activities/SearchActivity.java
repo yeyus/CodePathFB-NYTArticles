@@ -1,4 +1,4 @@
-package com.ea7jmf.nytarticles.activies;
+package com.ea7jmf.nytarticles.activities;
 
 import android.app.PendingIntent;
 import android.content.Intent;
