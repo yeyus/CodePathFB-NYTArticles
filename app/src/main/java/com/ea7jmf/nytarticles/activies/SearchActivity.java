@@ -26,12 +26,14 @@ import com.ea7jmf.nytarticles.models.SearchQuery;
 import com.ea7jmf.nytarticles.thirdparty.EndlessRecyclerViewScrollListener;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
 
 public class SearchActivity extends AppCompatActivity {
 
@@ -44,6 +46,8 @@ public class SearchActivity extends AppCompatActivity {
 
     private ArrayList<Doc> articles;
     private ArticlesAdapter articlesAdapter;
+
+    private final PublishSubject<SearchQuery> apiRequestSubject = PublishSubject.create();
 
     @BindView(R.id.rvSearchResults) RecyclerView rvSearchResults;
 
@@ -64,13 +68,22 @@ public class SearchActivity extends AppCompatActivity {
         rvSearchResults.addOnScrollListener(new EndlessRecyclerViewScrollListener(layoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount) {
-                getArticlesByQuery(
+                apiRequestSubject.onNext(
                         new SearchQuery.Builder(query)
-                                .page(page)
-                                .build()
+                            .page(page)
+                            .build()
                 );
             }
         });
+
+        apiRequestSubject
+                .distinct()
+                .sample(1, TimeUnit.SECONDS)
+                .subscribe(
+                        searchQuery -> getArticlesByQuery(searchQuery),
+                        throwable -> Log.e(TAG, "apiRequestSubject error", throwable),
+                        () -> Log.i(TAG, "apiRequestSubject complete")
+                );
 
         articlesAdapter.getOnClickSubject().subscribe(
                 doc -> {
@@ -97,10 +110,10 @@ public class SearchActivity extends AppCompatActivity {
         );
 
         // TODO - remove default query
-        query = new SearchQuery.Builder("obama")
-                .build();
-
-        getArticlesByQuery(query);
+        apiRequestSubject.onNext(
+                new SearchQuery.Builder("obama")
+                    .build()
+        );
 
     }
 
@@ -121,7 +134,7 @@ public class SearchActivity extends AppCompatActivity {
                 int size = articles.size();
                 articles.clear();
                 articlesAdapter.notifyItemRangeRemoved(0, size);
-                getArticlesByQuery(
+                apiRequestSubject.onNext(
                         new SearchQuery.Builder(query)
                             .query(queryString)
                             .build()
@@ -138,6 +151,7 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void getArticlesByQuery(SearchQuery query) {
+        this.query = query;
         Observable<Doc> call = apiService
                 .articleSearch(
                         query.getQuery(),

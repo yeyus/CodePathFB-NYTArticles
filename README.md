@@ -42,6 +42,7 @@ The following **bonus** features are implemented:
 The following **additional** features are implemented:
 
 * [x] SearchQuery object follows Builder pattern and is immutable
+* [x] Requests are reactive and throttled according to NYT api limits (1req/s)
 
 ## Video Walkthrough
 

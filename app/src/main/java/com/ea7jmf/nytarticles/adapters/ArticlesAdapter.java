@@ -50,7 +50,7 @@ public class ArticlesAdapter extends RecyclerView.Adapter<ArticlesAdapter.ViewHo
                     .map(multimedium -> String.format("https://nytimes.com/%s", multimedium.getUrl()))
                     .first();
 
-            ivThumbnail.setVisibility(View.INVISIBLE);
+            ivThumbnail.setVisibility(View.GONE);
             thumbnail.subscribe(
                     thumbUrl -> {
                         Glide.with(context)
@@ -62,7 +62,7 @@ public class ArticlesAdapter extends RecyclerView.Adapter<ArticlesAdapter.ViewHo
                     },
                     throwable -> {
                         if (throwable instanceof NoSuchElementException) {
-                            ivThumbnail.setVisibility(View.INVISIBLE);
+                            ivThumbnail.setVisibility(View.GONE);
                             return;
                         }
                         Log.i(TAG, "error while filtering thumbnail", throwable);
