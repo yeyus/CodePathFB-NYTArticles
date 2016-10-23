@@ -1,12 +1,16 @@
 package com.ea7jmf.nytarticles.activities;
 
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.customtabs.CustomTabsIntent;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -201,6 +205,14 @@ public class SearchActivity extends AppCompatActivity {
 
     private void getArticlesByQuery(SearchQuery query) {
         this.query = query;
+
+        if (!isNetworkAvailable()) {
+            Snackbar.make(drawerLayout, R.string.no_internet, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(R.string.retry, view -> getArticlesByQuery(query))
+                    .show();
+            return;
+        }
+
         Observable<Doc> call = apiService
                 .articleSearch(
                         query.getQuery(),
@@ -222,6 +234,13 @@ public class SearchActivity extends AppCompatActivity {
                         throwable -> Log.e(TAG, "HTTP call failed", throwable),
                         () -> Log.i(TAG, "HTTP fetch complete")
                 );
+    }
+
+    private Boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
     }
 
     private void clearResults() {

@@ -2,10 +2,36 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+
+        <!-- Action Bar Style -->
+        <item name="android:actionBarStyle">@style/NYTActionBar</item>
+        <item name="android:actionBarTabTextStyle">@style/NYTActionBarTabText</item>
+
+        <!-- Support library compatibility -->
+        <item name="actionBarStyle">@style/NYTActionBar</item>
+        <item name="actionBarTabTextStyle">@style/NYTActionBarTabText</item>
+
+    </style>
+
+    <style name="NYTActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
+        <item name="android:background">@color/actionBar_background</item>
+        <item name="android:titleTextStyle">@style/NYTActionBar.TitleTextStyle</item>
+
+        <!-- Support library compatibility -->
+        <item name="background">@color/actionBar_background</item>
+        <item name="titleTextStyle">@style/NYTActionBar.TitleTextStyle</item>
+    </style>
+
+    <style name="NYTActionBar.TitleTextStyle"
+        parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/actionBar_text</item>
+    </style>
+
+    <style name="NYTActionBarTabText" parent="@style/Widget.AppCompat.ActionBar.TabText">
+        <item name="android:textColor">@color/actionBar_text</item>
     </style>
 
 </resources>

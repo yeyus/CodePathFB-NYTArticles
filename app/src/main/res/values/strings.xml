@@ -7,4 +7,8 @@
     <string name="sort_label">Sort</string>
     <string name="news_desk_label">News Desk</string>
     <string name="filter">Filter</string>
+
+    <!-- Internet check -->
+    <string name="no_internet">No internet connection</string>
+    <string name="retry">Retry</string>
 </resources>
